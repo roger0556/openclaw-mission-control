@@ -103,6 +103,10 @@ const WebSearchView = dynamic(
   () => import("@/components/web-search-view").then((m) => m.WebSearchView),
   { loading: () => <SectionLoading /> }
 );
+const CalendarView = dynamic(
+  () => import("@/components/calendar-view").then((m) => m.CalendarView),
+  { loading: () => <SectionLoading /> }
+);
 const SettingsView = dynamic(
   () => import("@/components/settings-view").then((m) => m.SettingsView),
   { loading: () => <SectionLoading /> }
@@ -151,6 +155,7 @@ export type DashboardSection =
   | "permissions"
   | "tailscale"
   | "browser"
+  | "calendar"
   | "search"
   | "settings"
   | "hooks"
@@ -210,6 +215,8 @@ function SectionContent({ section }: { section: DashboardSection }) {
       return <TailscaleView />;
     case "browser":
       return <BrowserRelayView />;
+    case "calendar":
+      return <CalendarView />;
     case "search":
       return <WebSearchView />;
     case "settings":
