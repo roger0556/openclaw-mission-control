@@ -267,7 +267,8 @@ function EmbeddingModelEditor({
     queueMicrotask(() => setAuthLoading(true));
     (async () => {
       try {
-        const res = await fetch("/api/models");
+        const res = await fetch("/api/models", { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const providers = new Set<string>();
         // Extract providers that have auth configured
