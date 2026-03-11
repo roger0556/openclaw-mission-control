@@ -392,7 +392,7 @@ export function TasksView() {
       </div>
 
       {/* Kanban columns — horizontal scroll; columns fixed width; card content wraps vertically */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-hidden px-4 md:px-6 pb-6">
+      <div className="flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto px-4 md:px-6 pb-6">
         <div className="flex flex-col md:flex-row md:flex-nowrap gap-4 md:gap-6 pb-2 md:pb-0 w-max md:w-max">
           {columns.map((col) => {
           const colTasks = tasks.filter((t) => t.column === col.id);
@@ -749,6 +749,36 @@ export function TasksView() {
   );
 }
 
+/* ── renderDescription — linkify URLs and file paths ── */
+const URL_OR_PATH_RE = /(\bhttps?:\/\/[^\s,)]+|\/[^\s,)]{4,}|\b[\w.-]+\/[\w./-]{3,})/g;
+
+function renderDescription(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  URL_OR_PATH_RE.lastIndex = 0;
+  while ((match = URL_OR_PATH_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    const raw = match[0];
+    const href = /^https?:\/\//i.test(raw) ? raw : `vscode://file${raw.startsWith("/") ? raw : `/${raw}`}`;
+    parts.push(
+      <a
+        key={match.index}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="underline text-violet-400 hover:text-violet-300 transition-colors"
+      >
+        {raw}
+      </a>
+    );
+    last = match.index + raw.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length > 0 ? parts : text;
+}
+
 /* ── TaskCard ────────────────────────────────────── */
 
 function TaskCard({
@@ -861,7 +891,8 @@ function TaskCard({
           )}
           {task.description && !isRenaming && (
             <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-muted-foreground">
-              {task.description}
+              <span className="font-mono text-muted-foreground/50 mr-1">#{task.id}</span>
+              {renderDescription(task.description)}
             </p>
           )}
           {task.attachments && task.attachments.length > 0 && isImageAttachment(task.attachments[0]) && !isRenaming && (
@@ -911,10 +942,10 @@ function TaskCard({
                 </>
               );
             })()}
-            {task.assignee && !task.agentId && (
+            {task.assignee && (
               <>
                 <span className="text-muted-foreground/40">&bull;</span>
-                <span className="text-muted-foreground">{task.assignee}</span>
+                <span className="text-muted-foreground/70">@{task.assignee}</span>
               </>
             )}
             {task.dispatchStatus === "running" && (

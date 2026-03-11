@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, useSyncExternalStore, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Clock,
@@ -2147,7 +2147,7 @@ function CreateCronForm({
 
 /* ── Main CronView ───────────────────────────────── */
 
-export function CronView() {
+function CronViewInner() {
   const searchParams = useSearchParams();
   const showMode = searchParams.get("show"); // "errors" to auto-expand first error
   const targetJobId = searchParams.get("job");
@@ -3148,5 +3148,13 @@ export function CronView() {
         </div>
       )}
     </SectionLayout>
+  );
+}
+
+export function CronView() {
+  return (
+    <Suspense fallback={<div className="flex flex-1 flex-col items-center justify-center gap-3"><div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:0ms]" /><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:300ms]" /></div></div>}>
+      <CronViewInner />
+    </Suspense>
   );
 }

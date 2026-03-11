@@ -1,0 +1,184 @@
+Cron GET error: Error: Command failed: /opt/homebrew/bin/openclaw gateway call cron.list --json --params {}
+Config warnings:\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present
+Gateway call failed: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /Users/gus/.openclaw/openclaw.json
+Bind: loopback
+
+    at <unknown> (Gateway target: ws://127.0.0.1:18789) {
+  code: 1,
+  killed: false,
+  signal: null,
+  cmd: '/opt/homebrew/bin/openclaw gateway call cron.list --json --params {}',
+  stdout: '',
+  stderr: 'Config warnings:\\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present\n' +
+    'Gateway call failed: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason\n' +
+    'Gateway target: ws://127.0.0.1:18789\n' +
+    'Source: local loopback\n' +
+    'Config: /Users/gus/.openclaw/openclaw.json\n' +
+    'Bind: loopback\n'
+}
+Cron GET error: Error: Command failed: /opt/homebrew/bin/openclaw gateway call cron.list --json --params {}
+Config warnings:\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present
+Gateway call failed: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /Users/gus/.openclaw/openclaw.json
+Bind: loopback
+
+    at <unknown> (Gateway target: ws://127.0.0.1:18789) {
+  code: 1,
+  killed: false,
+  signal: null,
+  cmd: '/opt/homebrew/bin/openclaw gateway call cron.list --json --params {}',
+  stdout: '',
+  stderr: 'Config warnings:\\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present\n' +
+    'Gateway call failed: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason\n' +
+    'Gateway target: ws://127.0.0.1:18789\n' +
+    'Source: local loopback\n' +
+    'Config: /Users/gus/.openclaw/openclaw.json\n' +
+    'Bind: loopback\n'
+}
+Usage API error: Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.status' LIMIT 1;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: "sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.status' LIMIT 1;",
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+⨯ Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_rules ORDER BY created_at_ms DESC;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: 'sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_rules ORDER BY created_at_ms DESC;',
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+Usage API error: Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.anthropic.status' LIMIT 1;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: "sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.anthropic.status' LIMIT 1;",
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+⨯ Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_firings ORDER BY fired_at_ms DESC LIMIT 20;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: 'sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_firings ORDER BY fired_at_ms DESC LIMIT 20;',
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+Memory POST error: Error: Gateway memory_index failed (404): Tool not available: memory_index
+    at e (.next/server/app/api/memory/route.js:1:17506)
+    at async g (.next/server/app/api/memory/route.js:1:18136)
+    at async Q (.next/server/app/api/memory/route.js:1:6689)
+    at async k (.next/server/app/api/memory/route.js:1:14226)
+    at async j (.next/server/app/api/memory/route.js:1:15238)
+    at async Module.X (.next/server/app/api/memory/route.js:1:16305)
+Memory POST error: Error: Gateway memory_index failed (404): Tool not available: memory_index
+    at e (.next/server/app/api/memory/route.js:1:17506)
+    at async g (.next/server/app/api/memory/route.js:1:18136)
+    at async Q (.next/server/app/api/memory/route.js:1:6689)
+    at async k (.next/server/app/api/memory/route.js:1:14226)
+    at async j (.next/server/app/api/memory/route.js:1:15238)
+    at async Module.X (.next/server/app/api/memory/route.js:1:16305)
+Memory POST error: Error: Gateway memory_index failed (404): Tool not available: memory_index
+    at e (.next/server/app/api/memory/route.js:1:17506)
+    at async g (.next/server/app/api/memory/route.js:1:18136)
+    at async Q (.next/server/app/api/memory/route.js:1:6689)
+    at async k (.next/server/app/api/memory/route.js:1:14226)
+    at async j (.next/server/app/api/memory/route.js:1:15238)
+    at async Module.X (.next/server/app/api/memory/route.js:1:16305)
+Models API POST error: Error: Command failed: /opt/homebrew/bin/openclaw models scan --no-input --yes --json
+Config warnings:\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present
+Error: No tool-capable OpenRouter free models found.
+
+    at ignore-listed frames {
+  code: 1,
+  killed: false,
+  signal: null,
+  cmd: '/opt/homebrew/bin/openclaw models scan --no-input --yes --json',
+  stdout: '',
+  stderr: 'Config warnings:\\n- plugins.entries.acpx: plugin disabled (bundled (disabled by default)) but config is present\n' +
+    'Error: No tool-capable OpenRouter free models found.\n'
+}
+[chat] Gateway returned 400 from http://127.0.0.1:18789/v1/responses. {"error":{"message":"input: Invalid input","type":"invalid_request_error"}}
+⨯ Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_firings ORDER BY fired_at_ms DESC LIMIT 20;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: 'sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_firings ORDER BY fired_at_ms DESC LIMIT 20;',
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+⨯ Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_rules ORDER BY created_at_ms DESC;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: 'sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT * FROM alert_rules ORDER BY created_at_ms DESC;',
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+Usage API error: Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openrouter.status' LIMIT 1;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: "sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openrouter.status' LIMIT 1;",
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+Usage API error: Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.status' LIMIT 1;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: "sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.status' LIMIT 1;",
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+Usage API error: Error: Command failed: sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.last_fetch_ms' LIMIT 1;
+Error: in prepare, database is locked (5)
+
+    at ignore-listed frames {
+  code: 5,
+  killed: false,
+  signal: null,
+  cmd: "sqlite3 -json /Users/gus/.openclaw/mission-control/usage.db SELECT value FROM usage_meta WHERE key = 'provider.openai.last_fetch_ms' LIMIT 1;",
+  stdout: '',
+  stderr: 'Error: in prepare, database is locked (5)\n'
+}
+(node:855) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[chat] Gateway returned 400 from http://127.0.0.1:18789/v1/responses. {"error":{"message":"input: Invalid input","type":"invalid_request_error"}}
+(node:64950) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:1002) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[chat] Gateway returned 400 from http://127.0.0.1:18789/v1/responses. {"error":{"message":"input: Invalid input","type":"invalid_request_error"}}

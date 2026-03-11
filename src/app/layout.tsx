@@ -107,7 +107,7 @@ export default function RootLayout({
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <Header />
                 <RestartAnnouncementBar />
-                <main className="flex flex-1 overflow-hidden bg-stone-50 dark:bg-[#101214]">
+                <main className="flex flex-1 overflow-y-auto bg-stone-50 dark:bg-[#101214]">
                   {children}
                 </main>
               </div>

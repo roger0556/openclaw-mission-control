@@ -40,6 +40,8 @@ import {
   Webhook,
   Stethoscope,
   HelpCircle,
+  Activity as RunIcon,
+  Inbox,
 } from "lucide-react";
 import { getChatUnreadCount, subscribeChatStore } from "@/lib/chat-store";
 
@@ -74,6 +76,10 @@ const navItems: NavItem[] = [
   { section: "cron", label: "Heartbeat", icon: Heart, href: "/heartbeat", tab: "heartbeat", isSubItem: true },
   { section: "skills", label: "Skills", icon: Wrench, href: "/skills" },
   { section: "skills", label: "ClawHub", icon: Package, href: "/skills?tab=clawhub", tab: "clawhub", isSubItem: true },
+  // ── Knowledge ──
+  // ── Gus Platform ──
+  { group: "Gus Platform", section: "runs", label: "Run Monitor", icon: RunIcon, href: "/runs" },
+  { section: "kb-queue", label: "KB Queue", icon: Inbox, href: "/kb-queue" },
   // ── Knowledge ──
   { group: "Knowledge", section: "memory", label: "Memory", icon: Brain, href: "/memory" },
   { section: "docs", label: "Documents", icon: FolderOpen, href: "/documents" },

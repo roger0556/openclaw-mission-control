@@ -2,6 +2,10 @@ import { gatewayCall } from "@/lib/openclaw";
 import { runOpenResponsesText, guessMime } from "@/lib/openresponses";
 import { getGatewayUrl, getGatewayToken } from "@/lib/paths";
 
+// Allow up to 20MB for image/file attachments (default Next.js limit is 4MB)
+export const dynamic = "force-dynamic";
+export const maxDuration = 180;
+
 /**
  * Chat endpoint that sends a message to an OpenClaw agent and returns the response.
  * Works with Vercel AI SDK v5's TextStreamChatTransport.

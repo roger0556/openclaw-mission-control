@@ -12,6 +12,11 @@ function git(cmd: string): string {
 
 const nextConfig: NextConfig = {
   turbopack: {},
+  async rewrites() {
+    return [
+      { source: "/bridge/:path*", destination: "http://127.0.0.1:4000/:path*" },
+    ];
+  },
   env: {
     NEXT_PUBLIC_APP_VERSION: git("describe --tags --always") || "dev",
     NEXT_PUBLIC_COMMIT_HASH: git("rev-parse --short HEAD") || "unknown",
@@ -25,6 +30,7 @@ const nextConfig: NextConfig = {
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "X-Frame-Options", value: "DENY" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
       ],
     },
   ],

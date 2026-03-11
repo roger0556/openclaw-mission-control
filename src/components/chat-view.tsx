@@ -8,9 +8,10 @@ import {
   useRef,
   useMemo,
   useSyncExternalStore,
+  memo,
 } from "react";
-import { useChat } from "@ai-sdk/react";
-import { TextStreamChatTransport } from "ai";
+import { useChat, Chat } from "@ai-sdk/react";
+import { TextStreamChatTransport, type UIMessage } from "ai";
 import {
   Send,
   User,
@@ -256,6 +257,130 @@ function MessageContent({ text }: { text: string }) {
   );
 }
 
+const MessageList = memo(({ 
+  messages, 
+  emoji, 
+  timeFormat 
+}: { 
+  messages: UIMessage[]; 
+  emoji: string;
+  timeFormat: TimeFormatPreference;
+}) => {
+  return (
+    <>
+      {messages.map((message) => {
+        const isUser = message.role === "user";
+        const parts = message.parts ?? [];
+        const text =
+          parts
+            .filter(
+              (
+                p
+              ): p is Extract<(typeof parts)[number], { type: "text" }> =>
+                p.type === "text"
+            )
+            .map((p) => p.text)
+            .join("") || "";
+        const fileParts = parts.filter(
+          (
+            p
+          ): p is Extract<(typeof parts)[number], { type: "file" }> =>
+            p.type === "file"
+        );
+        const imageParts = fileParts.filter(
+          (p) => p.url && /^image\//i.test(p.mediaType ?? "")
+        );
+        const otherFileParts = fileParts.filter(
+          (p) => !p.url || !/^image\//i.test(p.mediaType ?? "")
+        );
+        return (
+          <div
+            key={message.id}
+            className={cn(
+              "mb-6 flex gap-3",
+              isUser ? "flex-row-reverse" : "flex-row"
+            )}
+          >
+            {/* Avatar */}
+            <div
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs",
+                isUser
+                  ? "bg-muted/80 text-foreground/70"
+                  : "border border-violet-500/30 bg-violet-500/10"
+              )}
+            >
+              {isUser ? (
+                <User className="h-4 w-4" />
+              ) : (
+                <span className="text-sm">
+                  {emoji}
+                </span>
+              )}
+            </div>
+
+            {/* Message bubble */}
+            <div
+              className={cn(
+                "max-w-md rounded-xl px-4 py-3 text-xs",
+                isUser
+                  ? "bg-accent text-foreground"
+                  : "bg-muted/80 text-foreground/70"
+              )}
+            >
+              {text ? <MessageContent text={text} /> : null}
+              {imageParts.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {imageParts.map((p, i) =>
+                    p.url ? (
+                      <img
+                        key={i}
+                        src={p.url}
+                        alt={p.filename ?? "Attached image"}
+                        className="max-h-48 max-w-full rounded-lg border border-foreground/10 object-contain"
+                      />
+                    ) : null
+                  )}
+                </div>
+              )}
+              {otherFileParts.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {otherFileParts.map((p, i) => (
+                    <span
+                      key={i}
+                      className="rounded bg-muted/80 px-1.5 py-0.5 text-xs opacity-90"
+                    >
+                      📎 {p.filename ?? "file"}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div
+                className={cn(
+                  "mt-2 text-xs",
+                  isUser
+                    ? "text-right text-stone-400 dark:text-stone-500"
+                    : "text-muted-foreground/60"
+                )}
+              >
+                {formatTime(
+                  "createdAt" in message
+                    ? (message as unknown as { createdAt: Date })
+                        .createdAt
+                    : new Date(),
+                  timeFormat,
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+});
+
+MessageList.displayName = "MessageList";
+
 /* ── Inline API key setup ─────────────────────── */
 
 const PROVIDERS = [
@@ -453,6 +578,30 @@ function ApiKeySetup({ onKeySaved, compact }: { onKeySaved: () => void; compact?
   );
 }
 
+
+/* ── Per-agent chat history persistence ─────── */
+const CHAT_HISTORY_PREFIX = "mc-chat-history:";
+const MAX_CHAT_MESSAGES = 200;
+const MAX_CHAT_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+type PersistedMessage = { id: string; role: string; parts?: unknown[]; content?: string; createdAt?: string; };
+function loadChatHistory(agentId: string): PersistedMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CHAT_HISTORY_PREFIX + agentId);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as PersistedMessage[];
+    const cutoff = Date.now() - MAX_CHAT_AGE_MS;
+    return parsed.filter((m) => !m.createdAt || new Date(m.createdAt).getTime() > cutoff);
+  } catch { return []; }
+}
+function saveChatHistory(agentId: string, messages: unknown[]): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(CHAT_HISTORY_PREFIX + agentId, JSON.stringify((messages as PersistedMessage[]).slice(-MAX_CHAT_MESSAGES))); } catch {}
+}
+function clearChatHistory(agentId: string): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.removeItem(CHAT_HISTORY_PREFIX + agentId); } catch {}
+}
 /* ── Chat panel for a single agent ─────────────── */
 /* These are always mounted; hidden via CSS when not selected */
 
@@ -625,9 +774,16 @@ function ChatPanel({
     []
   );
 
-  const { messages, sendMessage, status, setMessages, error } = useChat({
+  const [chatInstance] = useState(() => new Chat({
     transport,
+    messages: loadChatHistory(agentId) as UIMessage[],
+  }));
+  const { messages, sendMessage, status, setMessages, error } = useChat({
+    chat: chatInstance,
   });
+  useEffect(() => {
+    if (messages.length > 0) saveChatHistory(agentId, messages);
+  }, [agentId, messages]);
 
   const isLoading = status === "submitted" || status === "streaming";
   const noApiKeys = modelsLoaded && availableModels.length === 0;
@@ -726,6 +882,7 @@ function ChatPanel({
   const clearChat = useCallback(() => {
     setMessages([]);
     prevMsgCountRef.current = 0;
+    clearChatHistory(agentId);
     setChatSessionKey(createChatSessionKey(agentId));
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [agentId, setMessages]);
@@ -831,113 +988,11 @@ function ChatPanel({
           )
         ) : (
           <div className="mx-auto max-w-3xl px-4 py-6">
-            {messages.map((message) => {
-              const isUser = message.role === "user";
-              const parts = message.parts ?? [];
-              const text =
-                parts
-                  .filter(
-                    (
-                      p
-                    ): p is Extract<(typeof parts)[number], { type: "text" }> =>
-                      p.type === "text"
-                  )
-                  .map((p) => p.text)
-                  .join("") || "";
-              const fileParts = parts.filter(
-                (
-                  p
-                ): p is Extract<(typeof parts)[number], { type: "file" }> =>
-                  p.type === "file"
-              );
-              const imageParts = fileParts.filter(
-                (p) => p.url && /^image\//i.test(p.mediaType ?? "")
-              );
-              const otherFileParts = fileParts.filter(
-                (p) => !p.url || !/^image\//i.test(p.mediaType ?? "")
-              );
-              return (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "mb-6 flex gap-3",
-                    isUser ? "flex-row-reverse" : "flex-row"
-                  )}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs",
-                      isUser
-                        ? "bg-muted/80 text-foreground/70"
-                        : "border border-violet-500/30 bg-violet-500/10"
-                    )}
-                  >
-                    {isUser ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <span className="text-sm">
-                        {emoji}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Message bubble */}
-                  <div
-                    className={cn(
-                      "max-w-md rounded-xl px-4 py-3 text-xs",
-                      isUser
-                        ? "bg-accent text-foreground"
-                        : "bg-muted/80 text-foreground/70"
-                    )}
-                  >
-                    {text ? <MessageContent text={text} /> : null}
-                    {imageParts.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {imageParts.map((p, i) =>
-                          p.url ? (
-                            <img
-                              key={i}
-                              src={p.url}
-                              alt={p.filename ?? "Attached image"}
-                              className="max-h-48 max-w-full rounded-lg border border-foreground/10 object-contain"
-                            />
-                          ) : null
-                        )}
-                      </div>
-                    )}
-                    {otherFileParts.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {otherFileParts.map((p, i) => (
-                          <span
-                            key={i}
-                            className="rounded bg-muted/80 px-1.5 py-0.5 text-xs opacity-90"
-                          >
-                            📎 {p.filename ?? "file"}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div
-                      className={cn(
-                        "mt-2 text-xs",
-                        isUser
-                          ? "text-right text-stone-400 dark:text-stone-500"
-                          : "text-muted-foreground/60"
-                      )}
-                    >
-                      {formatTime(
-                        "createdAt" in message
-                          ? (message as unknown as { createdAt: Date })
-                              .createdAt
-                          : new Date(),
-                        timeFormat,
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <MessageList 
+              messages={messages} 
+              emoji={emoji} 
+              timeFormat={timeFormat} 
+            />
 
             {/* Loading indicator — only when waiting for first token, not during streaming */}
             {status === "submitted" && (
@@ -1113,6 +1168,7 @@ function ChatPanel({
             ref={fileInputRef}
             type="file"
             multiple
+            accept="image/*,application/pdf,text/*,.txt,.md,.csv,.json,.log"
             className="hidden"
             onChange={(e) => {
               if (e.target.files?.length) addFiles(e.target.files);
