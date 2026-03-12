@@ -82,3 +82,33 @@ Conclusion:
 
 ### Recommended next step
 Create a dedicated GitHub fork/custom remote for Roger's modified Mission Control and maintain customizations on a long-lived custom branch.
+
+### Follow-up completed on 2026-03-12
+Implemented the safer remote structure.
+
+Current remotes:
+- `origin https://github.com/roger0556/openclaw-mission-control.git`
+- `upstream https://github.com/robsannaa/openclaw-mission-control.git`
+
+Current branch tracking:
+- `main -> upstream/main`
+- `roger/session-persistence -> origin/roger/session-persistence`
+
+Branch pushed to fork:
+- `roger/session-persistence`
+
+Suggested future update flow:
+```bash
+cd /Users/gus/.openclaw/openclaw-mission-control
+git checkout main
+git fetch upstream
+git merge --ff-only upstream/main
+
+git checkout roger/session-persistence
+git merge main
+# resolve conflicts if needed, test, then push
+git push
+```
+
+Optional PR URL for this work:
+- `https://github.com/roger0556/openclaw-mission-control/pull/new/roger/session-persistence`
