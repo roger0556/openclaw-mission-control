@@ -6,7 +6,12 @@ const GITHUB_RELEASES_URL =
 
 /** Normalize version string for comparison (e.g. "v2026.2.19" or "2026.2.19" -> "2026.2.19"). */
 function normalizeVersion(v: string): string {
-  return String(v || "").replace(/^v/i, "").trim();
+  const raw = String(v || "").trim().replace(/^openclaw\s+/i, "");
+  const noPrefix = raw.replace(/^v/i, "").trim();
+  const calendarMatch = noPrefix.match(/\d+(?:\.\d+){1,3}/);
+  if (calendarMatch?.[0]) return calendarMatch[0];
+  const firstToken = noPrefix.split(/\s+/)[0];
+  return firstToken || "";
 }
 
 /**
@@ -169,11 +174,32 @@ export async function POST(request: NextRequest) {
       versionAfter = null;
     }
 
+    let wizardLastRunVersionSynced = false;
+    let wizardLastRunVersionSyncError: string | null = null;
+    if (!dryRun && versionAfter) {
+      const normalizedInstalledVersion = normalizeVersion(versionAfter);
+      if (normalizedInstalledVersion) {
+        try {
+          await runCli(
+            ["config", "set", "wizard.lastRunVersion", normalizedInstalledVersion],
+            8000,
+          );
+          wizardLastRunVersionSynced = true;
+        } catch (err) {
+          wizardLastRunVersionSyncError = err instanceof Error ? err.message : String(err);
+        }
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       result,
       dryRun,
       currentVersionAfter: versionAfter,
+      wizardLastRunVersionSynced,
+      ...(wizardLastRunVersionSyncError
+        ? { wizardLastRunVersionSyncError }
+        : {}),
     });
   } catch (err) {
     return NextResponse.json(
