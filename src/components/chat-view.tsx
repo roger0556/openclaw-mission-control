@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useSearchParams } from "next/navigation";
 import { TypingDots } from "@/components/typing-dots";
 import { cn } from "@/lib/utils";
 import { addUnread, clearUnread, setChatActive } from "@/lib/chat-store";
@@ -83,6 +84,38 @@ function createChatSessionKey(agentId: string) {
       ? crypto.randomUUID()
       : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   return `agent:${agentId}:mission-control:${suffix}`;
+}
+
+const CHAT_SESSION_STORAGE_KEY = "openclaw-chat-session-keys";
+
+function parseAgentIdFromSessionKey(sessionKey: string): string | null {
+  const match = sessionKey.trim().match(/^agent:([^:]+)/i);
+  return match?.[1] ? match[1] : null;
+}
+
+function loadPersistedSessionKey(agentId: string): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = localStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+    if (!raw) return "";
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const value = parsed?.[agentId];
+    return typeof value === "string" ? value.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+function persistSessionKey(agentId: string, sessionKey: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    parsed[agentId] = sessionKey;
+    localStorage.setItem(CHAT_SESSION_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // ignore storage failures
+  }
 }
 
 /** Convert File[] to FileUIPart[] (data URLs) for sendMessage */
@@ -263,6 +296,7 @@ function ChatPanel({
   modelsLoaded,
   isPostOnboarding,
   onClearPostOnboarding,
+  initialSessionKey,
 }: {
   agentId: string;
   agentName: string;
@@ -275,6 +309,7 @@ function ChatPanel({
   modelsLoaded: boolean;
   isPostOnboarding: boolean;
   onClearPostOnboarding: () => void;
+  initialSessionKey?: string;
 }) {
   const postOnboardingStarterPrompt = "Say hello and tell me how you can help me today.";
   const timeFormat = useSyncExternalStore(
@@ -286,7 +321,9 @@ function ChatPanel({
     isPostOnboarding && isSelected ? postOnboardingStarterPrompt : ""
   );
   const chatSessionKeyRef = useRef(
-    typeof window === "undefined" ? "" : createChatSessionKey(agentId)
+    typeof window === "undefined"
+      ? ""
+      : initialSessionKey?.trim() || loadPersistedSessionKey(agentId) || createChatSessionKey(agentId)
   );
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -302,9 +339,13 @@ function ChatPanel({
 
   const ensureChatSessionKey = useCallback(() => {
     const existing = chatSessionKeyRef.current.trim();
-    if (existing) return existing;
+    if (existing) {
+      persistSessionKey(agentId, existing);
+      return existing;
+    }
     const next = createChatSessionKey(agentId);
     chatSessionKeyRef.current = next;
+    persistSessionKey(agentId, next);
     return next;
   }, [agentId]);
 
@@ -347,6 +388,35 @@ function ChatPanel({
 
   const isLoading = status === "submitted" || status === "streaming";
   const noApiKeys = modelsLoaded && availableModels.length === 0;
+  const hydratedSessionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const sessionKey = (initialSessionKey?.trim() || loadPersistedSessionKey(agentId) || chatSessionKeyRef.current || "").trim();
+    if (!sessionKey) return;
+    if (hydratedSessionRef.current === sessionKey) return;
+
+    let cancelled = false;
+    chatSessionKeyRef.current = sessionKey;
+    persistSessionKey(agentId, sessionKey);
+
+    void fetch(`/api/chat/history?sessionKey=${encodeURIComponent(sessionKey)}&limit=200`, {
+      cache: "no-store",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data || !Array.isArray(data.messages)) return;
+        prevMsgCountRef.current = data.messages.length;
+        setMessages(data.messages);
+        hydratedSessionRef.current = sessionKey;
+      })
+      .catch(() => {
+        // Keep empty UI on history load failure.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, initialSessionKey, setMessages]);
 
   // ── Detect new assistant messages → trigger unread notification ──
   useEffect(() => {
@@ -450,7 +520,10 @@ function ChatPanel({
   const clearChat = useCallback(() => {
     setMessages([]);
     prevMsgCountRef.current = 0;
-    chatSessionKeyRef.current = createChatSessionKey(agentId);
+    const nextSessionKey = createChatSessionKey(agentId);
+    chatSessionKeyRef.current = nextSessionKey;
+    hydratedSessionRef.current = null;
+    persistSessionKey(agentId, nextSessionKey);
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [agentId, setMessages]);
 
@@ -918,8 +991,11 @@ function ChatPanel({
 const isHosted = process.env.NEXT_PUBLIC_AGENTBAY_HOSTED === "true";
 
 export function ChatView({ isVisible = true }: { isVisible?: boolean }) {
+  const searchParams = useSearchParams();
+  const requestedSessionKey = searchParams.get("session")?.trim() || "";
+  const requestedAgentId = requestedSessionKey ? parseAgentIdFromSessionKey(requestedSessionKey) : null;
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<string>("main");
+  const [selectedAgent, setSelectedAgent] = useState<string>(requestedAgentId || "main");
   const selectedAgentRef = useRef(selectedAgent);
   selectedAgentRef.current = selectedAgent;
   const [agentsLoading, setAgentsLoading] = useState(true);
@@ -950,8 +1026,18 @@ export function ChatView({ isVisible = true }: { isVisible?: boolean }) {
 
   // Track which agents have been "opened" (we'll mount their ChatPanel forever)
   const [mountedAgents, setMountedAgents] = useState<Set<string>>(
-    new Set(["main"])
+    new Set(requestedAgentId ? ["main", requestedAgentId] : ["main"])
   );
+
+  useEffect(() => {
+    if (!requestedAgentId) return;
+    setSelectedAgent(requestedAgentId);
+    setMountedAgents((prev) => {
+      const next = new Set(prev);
+      next.add(requestedAgentId);
+      return next;
+    });
+  }, [requestedAgentId]);
 
   // Fetch chat bootstrap data on mount (gateway config + sessions only)
   const bootstrapLoadedRef = useRef(false);
@@ -1182,6 +1268,7 @@ export function ChatView({ isVisible = true }: { isVisible?: boolean }) {
               modelsLoaded={modelsLoaded}
               isPostOnboarding={isPostOnboarding}
               onClearPostOnboarding={clearPostOnboarding}
+              initialSessionKey={requestedAgentId === agentId ? requestedSessionKey : undefined}
             />
           );
         })
