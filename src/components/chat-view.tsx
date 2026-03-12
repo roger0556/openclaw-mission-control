@@ -405,8 +405,15 @@ function ChatPanel({
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !data || !Array.isArray(data.messages)) return;
-        prevMsgCountRef.current = data.messages.length;
-        setMessages(data.messages);
+        const hydratedMessages = data.messages.map((message: { createdAt?: string }) => ({
+          ...message,
+          createdAt:
+            message?.createdAt && typeof message.createdAt === "string"
+              ? new Date(message.createdAt)
+              : new Date(),
+        }));
+        prevMsgCountRef.current = hydratedMessages.length;
+        setMessages(hydratedMessages);
         hydratedSessionRef.current = sessionKey;
       })
       .catch(() => {

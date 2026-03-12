@@ -53,6 +53,15 @@ Updated `src/components/chat-view.tsx` to:
 ### Validation performed
 - Ran production build successfully:
   - `npm run build`
+- Ran a live Playwright/browser validation against a local Mission Control dev instance.
+- Verified this flow end-to-end:
+  1. seed a chat session through Mission Control `/api/chat`
+  2. open `/chat?session=<sessionKey>`
+  3. confirm the seeded conversation renders
+  4. navigate away to `/tasks`
+  5. return to `/chat`
+  6. confirm the same conversation still renders
+  7. reopen the explicit deep-link and confirm it again
 
 ### Rollback options
 #### Option 1 — Switch back to main branch
